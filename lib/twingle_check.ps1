@@ -28,7 +28,8 @@ if ($updateList.count -gt 0) {
 	$computername = (gc env:computername).toLower()
 	
 	
-	if ($emailclient -eq 1) { 
+	if ($emailclient -eq 1) {
+		# CUSTOMISE THIS YOURSELF! 
 		log "Sending maintenance notification email now..."
 		$emailSubject = "Maintenance notification for event at $installtime on "+($installday.toLower())
 		$emailBody = ""

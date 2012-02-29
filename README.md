@@ -18,8 +18,9 @@ Some things twingle can do for you:
 
 # Installation 
  - Copy the set of twingle files to `C:\twingle`, or similar
- - Run `setup_twingle.ps1` to get the mini-installer
-  - or run `-attended` to get the whole shebang
+ - Run `Install Twingle.bat` to get the mini-installer
+  - or run `twingle.ps1 -setup -full` to get the whole shebang
+  - automatic installer can be got via `twingle.ps1 -setup -auto -day=DAY -time=XXXX`
  - Set your install day and time (default, weekly), and notification time (3 days before installation)
  - Twingle will do the rest!
 
