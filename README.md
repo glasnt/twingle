@@ -39,8 +39,8 @@ Two areas of the code that require customisation from the installer are the `ema
 
 # Change List 
 
-0.1.0 : "Stable" releae, that actually does a lot of nice things. 
-0.0.1 : Inital commit to public repo. Stripped version of working code, still horrid and full of swearwords. 
+* 0.1.0 : "Stable" release, that actually does a lot of nice things.
+* 0.0.1 : Inital commit to public repo. Stripped version of working code, still horrid and full of swearwords. 
 
 
 [Tingle]: http://github.com/anchor/tingle
