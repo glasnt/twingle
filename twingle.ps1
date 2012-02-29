@@ -14,49 +14,48 @@
 #
 ##############################################################################
 
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
+Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
+
 # Skip straight to setup if required
 if ($args -match "-setup") { 
-	.\setup_twingle.ps1 $args
+	invoke-expression "$twingledir\lib\setup_twingle.ps1 $args"
 	exit 0
 } 
 
-
-
 function usage { 
 	"Twingle - tingle for windows."
-	"Accepts the following parameters: -warm or -install or -reboot"
+	"Parameters: -setup, -check, -warm, -install, -reboot"
 	exit 0
 }
 
-# Setup Twingle Environment
-function getConfig ($config){ 
-	$value = $ini["config"][$config]
-	if ($value.length -eq 0) { "Config not found: $config"}	
-	return $value
-}
+if (!(Test-Path "$twingledir\twingle.cfg")) { 
+	" "
+	Write-host "Whoops! " -foreground red -nonewline
+	"Twingle doesn't appear to be installed."
+	" " 
+	""+(Get-Date)+" Twingle config not found, cannot run" | out-file "$twingledir\confignotfound.log" -append
+	usage
+} 
 
-function twingleDir {   
-	 $curr = Split-Path ([IO.FileInfo] ((Get-Variable MyInvocation -Scope 1).Value).MyCommand.Path).Fullname
-	if ($curr -match "lib") { $curr = $curr.substring(0, $curr.length-3) }; if ($curr.substring($curr.length) -eq "\") { $curr = $curr.substring(0,$curr.length-1) } return $curr
-}
-$twingledir = twingledir
-$common = "$twingledir\lib\twingle_common.psm1"
-Import-Module $common
-$ini = Parse_IniFile
 
-#debug bonanza
+# debug bonanza
 if ($args -match "-debug") { 
 	debug_mode
 }
 
+# Hardcore logging here. 
+$ErrorActionPreference="SilentlyContinue"
+Stop-Transcript | out-null
+$ErrorActionPreference = "Continue" # or "Stop"
+$null = Start-Transcript -path $twingledir\superlog.log -append
+
 log "*******************************************************"
 log "Starting a new twingle run; args: $args"
 
-
 # Arg Parse.
 if ($args) {
-  
-	if ($args -match "-warm") {
+  	if ($args -match "-warm") {
 		$warm = 1;
 	} elseif ($args -match "-install") {
 		$install = 1;
@@ -73,7 +72,6 @@ if ($args) {
 	usage
 }
 
-$twingledir = getconfig twingledir
 
 if ($warm) { 
 	log "Input parameters say: download pending updates"
@@ -81,12 +79,15 @@ if ($warm) {
 }
 
 if ($install) {
+	set_nagios_status OK "Twingle is installing updates..."
 	log "Input parameters say: download pending updates, then install"
+	
 	invoke-expression "$twingledir\lib\twingle_warm_cache.ps1"
 	invoke-expression "$twingledir\lib\twingle_install.ps1"
 }
 
 if ($reboot) {
+	set_nagios_status OK "Twingle is installing updates..."
 	log "Input parameters say:  download updates, install them, then reboot"
 	invoke-expression "$twingledir\lib\twingle_warm_cache.ps1"
 	invoke-expression "$twingledir\lib\twingle_install.ps1"
@@ -94,10 +95,14 @@ if ($reboot) {
 }
 
 if ($check) { 
+	set_nagios_status OK "Twingle is checking for updates..."
 	log "Input parameters say: do the weekly check for updates" 
 	invoke-expression "$twingledir\lib\twingle_check.ps1"
 }
 
 log "Finished the twingle run."
+
+# stop hardcore logging
+$null = Stop-transcript | out-null
 
 exit 0

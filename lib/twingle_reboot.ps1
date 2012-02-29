@@ -1,62 +1,72 @@
 ##############################################################################
 # 
-# Reboot - check it's nessesary, then reboot as required.
+# Twingle - Reboot - check it's nessesary, then reboot as required.
 #
 ##############################################################################
-
-function twingleDir {   
-	 $curr = Split-Path ([IO.FileInfo] ((Get-Variable MyInvocation -Scope 1).Value).MyCommand.Path).Fullname
-	if ($curr -match "lib") { $curr = $curr.substring(0, $curr.length-3) }; return $curr.substring(0,$curr.length-1)
-}
-$twingledir = twingledir
-$common = "$twingledir\lib\twingle_common.psm1"
-Import-Module $common
-$ini = Parse_IniFile
-
-nest up; log "start - twingle_reboot.ps1" 
+$env:PSModulePath = $env:PSModulePath + ";c:\lib"; 
+Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
+logging start twingle_reboot
+##############################################################################
 
 # Do the reboot logic
-
-$kindlyreboot = getconfig kindlyreboot
-$noreboot = getconfig noreboot
+$canhasreboot = getconfig canhasreboot
 
 #confirm reboot is required before continuing
-if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"){ 
+#if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"){ 
 
-	if ($noreboot -eq 1) {
+	if ($canhasreboot -eq 1) {
+		log "Rebooting process start."
+		
+	
+        # Work out when and where to reboot.
+		$reboottype = getconfig reboottype
+		$rebootdelay = getConfig rebootdelay
+		$reboottime = getconfig reboottime
+				
+		if ($reboottype -eq "DELAY") { 
+			#rebooting NOW
+			log "Rebooting machine in $rebootdelay seconds (DELAY)"
+			$schedreboot = (Get-Date).AddSeconds($rebootDelay)			
+			$schedreboottime = ""+(($schedreboot).Hour)+":"+(($schedreboot).Minute)
+			$Schedrebootdate =  $schedreboot.ToShortDateString()
+			
+		} elseif ($reboottype -eq "TIME") {
+			#Reboot at next TIME
+			log "Rebooting machine at $reboottime (TIME)"
+			$timenow = ""+((Get-Date).Hour).toString("00")+":"+((Get-Date).Minute).ToString("00")
+			$Schedrebootdate = (Get-Date)
+			if ( ($reboottime  -replace ':','') -lt ($timenow -replace ':','')) { 
+				$Schedrebootdate = $Schedrebootdate.AddDays(1).ToShortDateString()
+			}
+			$schedreboottime = $reboottime
+		}
+		
+		log "Reboot date: $Schedrebootdate, reboot time $schedreboottime"
+		$prerebootscript = "powershell $twingledir\lib\pre_reboot_hook.ps1"
+		schedule_task "TwinglePreReboot" "ONCE" $Schedrebootdate $schedreboottime $prerebootscript
+		
+		#msg people
+		log "Sending system wide message notifying of date/time of reboot."
+		$computer = gc env:computername
+		$msgcode = "msg * Warning: $computer will be rebooting at $schedreboottime on $Schedrebootdate for scheduled updates. To cancel, remove the scheduled task 'TwinglePreReboot', or run C:\twingle\Cancel Pending Maintenance.bat"
+		invoke-expression $msgcode
+
+        set_nagios_status WARNING "Server updated, rebooting at $schedreboottime on $Schedrebootdate"
+
+		log "Reboot setup complete"
+	}
+	else { #can't reboot
+	
 		log "Twingle isn't allowed to reboot this server. Let's tell someone about it"
 		
 		set_nagios_status WARNING "Updates applied, server needs manual reboot."
-		# email someone here too
-	}
-	if ($kindlyreboot -eq 1) {
-		log "Going to nicely tell the user that shit's going down"
 		
-		set_nagios_status WARNING "Updates applied. Automatic reboot pending..."
-		
-		# setup the post reboot clearing. 
-		$TwinglePostReboot = "schtasks /create /tn `"TwinglePostReboot`" /tr `"powershell $twingledir\lib\post_reboot_hook.ps1`"  /sc ONSTART /ru system"
-		$null = invoke-expression $TwinglePostReboot
-		
-		#schedule a delayed reboot, but delay by whatever time.
-		$computername = gc env:computername
-		$rebootdelay = getConfig rebootdelay
-		$reboottime = (Get-Date).AddSeconds($rebootDelay).ToShortTimeString()
-		
-		#And shut it down
-		$rebootme = "shutdown /r /t $rebootdelay /c `"Dear User, $computername is rebooting at $reboottime for Windows Updates. Love, Twingle <3.`""
-		log $rebootme
-		invoke-expression $rebootme
-		
-		exit 0
 	}
 	
-} else {
-	log " x No reboot required by update."
-}
+#} else {
+#	log " x No reboot required by update."
+#}
 
+logging end twingle_reboot
 
-
-log "end - twingle_reboot.ps1"; nest down
 exit 0
-

@@ -1,23 +1,15 @@
 ##############################################################################
-# 
-# Warm Cache (download updates) as per cachefile contents (got by twingle_update)
+#
+# Twingle - Warm Cache - Download updates
 #
 ##############################################################################
-function twingleDir {   
-	 $curr = Split-Path ([IO.FileInfo] ((Get-Variable MyInvocation -Scope 1).Value).MyCommand.Path).Fullname
-	if ($curr -match "lib") { $curr = $curr.substring(0, $curr.length-3) }; return $curr.substring(0,$curr.length-1)
-}
-$twingledir = twingledir
-$common = "$twingledir\lib\twingle_common.psm1"
-Import-Module $common
-$ini = Parse_IniFile
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
+Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
+logging start twingle_warm_cache
+##############################################################################
 
-nest up; log "start - twingle_warm_cache.ps1" 
-
-# Update before downloading 
-invoke-expression "$twingledir\lib\twingle_update.ps1"
-
-$updateCacheFile = getconfig cachefile 
+$updateCacheFile = getconfig cacheFile
+$updateCacheFile = "$twingledir\$updateCacheFile"
 $updateList = Import-Clixml $updateCacheFile
 
 # I'm sorry, I'm so sorry.
@@ -54,7 +46,7 @@ if ($downloads.count -ne 0) {
 	log "x No updates to download"
 }
 
-log "end - twingle_warm_cache.ps1" ; nest down
+logging end twingle_warm_cache
 
 exit 0
 

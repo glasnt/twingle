@@ -1,22 +1,18 @@
 ##############################################################################
 # 
-# Weekly Update processing. Runs directly from Task Scheduler.
+# Twingle - Weekly Update processing. Runs directly from Task Scheduler.
 #
 ##############################################################################
-function twingleDir {   
-	 $curr = Split-Path ([IO.FileInfo] ((Get-Variable MyInvocation -Scope 1).Value).MyCommand.Path).Fullname
-	if ($curr -match "lib") { $curr = $curr.substring(0, $curr.length-3) }; return $curr.substring(0,$curr.length-1)
-}
-$twingledir = twingledir
-$common = "$twingledir\lib\twingle_common.psm1"
-Import-Module $common
-$ini = Parse_IniFile
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
+Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
+logging start twingle_check
+##############################################################################
 
-nest up; log "start - twingle_check.ps1" 
-
+# Check for updates
 invoke-expression "$twingledir\lib\twingle_update.ps1"
 
 $updateCacheFile = getconfig cachefile 
+$updateCacheFile = "$twingledir\$updateCacheFile"
 $updateList = Import-Clixml $updateCacheFile
 
 if ($updateList.count -gt 0) { 
@@ -34,13 +30,10 @@ if ($updateList.count -gt 0) {
 	
 	if ($emailclient -eq 1) { 
 		log "Sending maintenance notification email now..."
-
-		# CUSTOMIZE THIS YOURSELF!
-
-		$emailSubject = "Yo! Stuff's happening on your server at $installtime on "+($installday.toLower())
-		$emailBody = "Content goes here"
-		$emailFrom = "skynet@yourcompany.com"
-		$emailTo = "victim@anothercompany.com"
+		$emailSubject = "Maintenance notification for event at $installtime on "+($installday.toLower())
+		$emailBody = ""
+		$emailFrom = "root@$computername.YOURCOMPANY.net.au"
+		$emailTo = "YOURSuperImportantEmailAddressHere@Lolcakes.com"
 		$smtpServer = "localhost"
 		
 		$smtp = new-object Net.Mail.SmtpClient($smtpServer)
@@ -62,8 +55,8 @@ if ($updateList.count -gt 0) {
 	if ($installday -eq "WED") { $installdaynum = 3 } 	
 	if ($installday -eq "THU") { $installdaynum = 4 } 
 	
-	if ($today -eq $installdaynum) { $installdaynum += 7} 
 	if ($today -gt $installdaynum) { $installdaynum += 7}
+	if ($today -eq $installdaynum) { $installdaynum += 7} 
 	$datediff = ($installdaynum - $today)
 	
 	$installdate = (Get-Date).AddDays($datediff).ToShortDateString()
@@ -73,40 +66,15 @@ if ($updateList.count -gt 0) {
 	if ($installdate.length -eq 9) { $installdate = "0"+$installdate} # /o_O\
 		
 	$schedtaskname = "Twingle Windows updates for next $installday" 
-	
-	$existingtask = get_task $schedtaskname
-	if ($existingtask) { 
-		log "task already exists. Removing old task"; 
-		$output = invoke-expression "schtasks /delete /tn `"$schedtaskname`" /f"
-		if ($output -match "SUCCESS") { 
-			log "Old task deleted successfully" 
-		} else { 
-			log "Old task deletion failed" 
-	}
-	}
-
-	
-	$schedtask = "schtasks /create /tn `"$schedtaskname`" "
-	$schedtask += "/TR `"powershell.exe $twingledir\twingle.ps1 $action`" "
-	$schedtask += "/sc ONCE /st $installtime /sd $installdate /f"
-
-	log "going to run this code to create the task: $schedtask"
-	
-	$output = invoke-expression $schedtask	
-	if ($output -match "SUCCESS") { 
-		log "Scheduled task successfully created, will execute in $datediff days, on $installdate at $installtime" 
-	} else { 
-		log "Scheduled task could not be created." 
-	}
-	
-	set_nagios_status OK "Updates scheduled for $installday on $installtime"
-	
-	
-	
+	schedule_task $schedtaskname "ONCE" $installdate $installtime "powershell.exe $twingledir\twingle.ps1 $action"
+	set_nagios_status OK "Updates scheduled for $installtime on $installdate"
+		
 } else {
 	#no updates pending
-	log "No updates pending, not going to schedule any installation."
+	log "x No updates pending, not going to schedule any installation."
 	set_nagios_status OK "No updates pending"
 }
 
-log "end twingle_weekly_update_check.ps1";nest down
+logging end twingle_check
+
+exit 0

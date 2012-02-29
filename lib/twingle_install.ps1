@@ -1,19 +1,16 @@
 ##############################################################################
-# 
-# Install Updates - installs anything downloaded in the Windows Update thingy.
+#
+# Twingle - Install Updates - installs anything downloaded in the Windows Update thingy.
 #
 ##############################################################################
+$env:PSModulePath = $env:PSModulePath + ";c:\lib"; 
+Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
+logging start twingle_install
+##############################################################################
 
-function twingleDir {   
-	 $curr = Split-Path ([IO.FileInfo] ((Get-Variable MyInvocation -Scope 1).Value).MyCommand.Path).Fullname
-	if ($curr -match "lib") { $curr = $curr.substring(0, $curr.length-3) }; return $curr.substring(0,$curr.length-1)
-}
-$twingledir = twingledir
-$common = "$twingledir\lib\twingle_common.psm1"
-Import-Module $common
-$ini = Parse_IniFile
-
-nest up; log "start - twingle_install.ps1" 
+#cleanup the sch. task
+$installDay = getconfig installDay
+remove_schtask "Twingle Windows updates for next $installday" 
 
 # Do the installation dance
 
@@ -41,9 +38,10 @@ if ($updatesToInstall.count -gt 0 ) {
 	
 } else { 
 	log "No updates to install."
+	set_nagios_status OK "No updates to install"
 }
 
-log "end - twingle_install.ps1" ; nest down
+logging end twingle_install
 
 exit 0
 

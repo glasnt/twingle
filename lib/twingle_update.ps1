@@ -1,23 +1,15 @@
 ##############################################################################
-# 
-# Update that cache file
+#
+# Twingle - Update the Updates list
 #
 ##############################################################################
-
-function twingleDir {   
-	 $curr = Split-Path ([IO.FileInfo] ((Get-Variable MyInvocation -Scope 1).Value).MyCommand.Path).Fullname
-	if ($curr -match "lib") { $curr = $curr.substring(0, $curr.length-3) }; return $curr.substring(0,$curr.length-1)
-}
-$twingledir = twingledir
-$common = "$twingledir\lib\twingle_common.psm1"
-Import-Module $common
-$ini = Parse_IniFile
-
-nest up; log "start - twingle_update.ps1" 
-
-# Update the update listing of updates.
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
+Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
+logging start twingle_update
+##############################################################################
 
 $updateCacheFile = getconfig cachefile 
+$updateCacheFile = "$twingledir\$updateCacheFile"
 $updateCacheExpireHours = getconfig updateCacheExpireHours
 
 if (-not (Test-Path $updateCacheFile)) { 
@@ -28,7 +20,6 @@ elseif ((Get-Date) -gt ((Get-Item $updateCacheFile).LastWriteTime.AddHours($upda
 	log "Cache file too old, going to do update."
     $updateRequired = 1 
 }
-
 
 if ($updateRequired) {
 	#actually update things	
@@ -52,7 +43,6 @@ if ($updateRequired) {
 		}	
 	}
 
-	$updateCacheFile = getconfig cachefile
 	Export-Clixml -InputObject $updateList -Path $updateCacheFile
 
 	foreach ($up in $updateList) {
@@ -63,6 +53,5 @@ if ($updateRequired) {
 	log "x Cache file doesn't need to be updated"
 } 
 
-log "end - twingle_update.ps1"; nest down
 
-exit 0
+logging end twingle_update
