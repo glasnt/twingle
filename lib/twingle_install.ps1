@@ -3,7 +3,7 @@
 # Twingle - Install Updates - installs anything downloaded in the Windows Update thingy.
 #
 ##############################################################################
-$env:PSModulePath = $env:PSModulePath + ";c:\lib"; 
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
 Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
 logging start twingle_install
 ##############################################################################

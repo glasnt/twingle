@@ -39,6 +39,7 @@ Two areas of the code that require customisation from the installer are the `ema
 
 # Change List 
 
+* 0.2.0 : "Stable SP1" release, nothing should actually break. A few bug fixes, but should be OK.
 * 0.1.0 : "Stable" release, that actually does a lot of nice things.
 * 0.0.1 : Inital commit to public repo. Stripped version of working code, still horrid and full of swearwords. 
 

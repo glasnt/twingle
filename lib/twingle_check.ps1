@@ -28,18 +28,15 @@ if ($updateList.count -gt 0) {
 	$computername = (gc env:computername).toLower()
 	
 	
-	if ($emailclient -eq 1) {
-		# CUSTOMISE THIS YOURSELF! 
-		log "Sending maintenance notification email now..."
-		$emailSubject = "Maintenance notification for event at $installtime on "+($installday.toLower())
-		$emailBody = ""
-		$emailFrom = "root@$computername.YOURCOMPANY.net.au"
-		$emailTo = "YOURSuperImportantEmailAddressHere@Lolcakes.com"
-		$smtpServer = "localhost"
-		
-		$smtp = new-object Net.Mail.SmtpClient($smtpServer)
-		$emailresult = $smtp.Send($emailFrom, $emailTo, $emailSubject, $emailBody)
-		
+    # CUSTOMISE THIS YOURSELF! 
+    if ($emailclient -eq 1) { 
+        log "Sending maintenance notification email now..."
+        $emailSubject = "Maintenance notification for event at $installtime on "+($installday.toLower())
+        $emailBody = ""
+        $emailFrom = "root@$computername.YOURCOMPANY.net.au"
+        $emailTo = "YOURSuperImportantEmailAddressHere@Lolcakes.com"
+        $smtpServer = "localhost"
+
 		log "email sent."
 	} else { 
 		log "No email going to be sent to client, because of config"
@@ -60,12 +57,9 @@ if ($updateList.count -gt 0) {
 	if ($today -eq $installdaynum) { $installdaynum += 7} 
 	$datediff = ($installdaynum - $today)
 	
-	$installdate = (Get-Date).AddDays($datediff).ToShortDateString()
+	$installdate = format_date (Get-Date).AddDays($datediff)
 	
-	log "Install day is $installday, next installation date is $installdate"
-		
-	if ($installdate.length -eq 9) { $installdate = "0"+$installdate} # /o_O\
-		
+	log "Install day is $installday, next installation date is $installdate"		
 	$schedtaskname = "Twingle Windows updates for next $installday" 
 	schedule_task $schedtaskname "ONCE" $installdate $installtime "powershell.exe $twingledir\twingle.ps1 $action"
 	set_nagios_status OK "Updates scheduled for $installtime on $installdate"

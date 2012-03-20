@@ -3,7 +3,7 @@
 # Twingle - First Time Setup
 #
 ##############################################################################
-$env:PSModulePath = $env:PSModulePath + ";c:\lib"; 
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
 Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
 logging start setup_twingle
 ##############################################################################
@@ -262,7 +262,6 @@ blankline
 
 # send passive alerty goodness.
 out "Sending first Twingle passive notification to nagios... "
-
 set_nagios_status OK  "Twingle installed. Pending first run"
 
 

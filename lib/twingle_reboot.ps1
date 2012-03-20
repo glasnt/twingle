@@ -3,7 +3,7 @@
 # Twingle - Reboot - check it's nessesary, then reboot as required.
 #
 ##############################################################################
-$env:PSModulePath = $env:PSModulePath + ";c:\lib"; 
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
 Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
 logging start twingle_reboot
 ##############################################################################
@@ -12,7 +12,7 @@ logging start twingle_reboot
 $canhasreboot = getconfig canhasreboot
 
 #confirm reboot is required before continuing
-#if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"){ 
+if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired"){ 
 
 	if ($canhasreboot -eq 1) {
 		log "Rebooting process start."
@@ -26,17 +26,17 @@ $canhasreboot = getconfig canhasreboot
 		if ($reboottype -eq "DELAY") { 
 			#rebooting NOW
 			log "Rebooting machine in $rebootdelay seconds (DELAY)"
-			$schedreboot = (Get-Date).AddSeconds($rebootDelay)			
-			$schedreboottime = ""+(($schedreboot).Hour)+":"+(($schedreboot).Minute)
-			$Schedrebootdate =  $schedreboot.ToShortDateString()
+			$schedreboot = (Get-Date).AddSeconds($rebootDelay)	
+			$Schedrebootdate = format_date $schedreboot		
+			$schedreboottime = format_time $schedreboot
 			
 		} elseif ($reboottype -eq "TIME") {
 			#Reboot at next TIME
 			log "Rebooting machine at $reboottime (TIME)"
-			$timenow = ""+((Get-Date).Hour).toString("00")+":"+((Get-Date).Minute).ToString("00")
+			$timenow = format_time (get-date)
 			$Schedrebootdate = (Get-Date)
 			if ( ($reboottime  -replace ':','') -lt ($timenow -replace ':','')) { 
-				$Schedrebootdate = $Schedrebootdate.AddDays(1).ToShortDateString()
+				$Schedrebootdate = format_date ($Schedrebootdate.AddDays(1))
 			}
 			$schedreboottime = $reboottime
 		}
@@ -48,7 +48,7 @@ $canhasreboot = getconfig canhasreboot
 		#msg people
 		log "Sending system wide message notifying of date/time of reboot."
 		$computer = gc env:computername
-		$msgcode = "msg * Warning: $computer will be rebooting at $schedreboottime on $Schedrebootdate for scheduled updates. To cancel, remove the scheduled task 'TwinglePreReboot', or run C:\twingle\Cancel Pending Maintenance.bat"
+		$msgcode = "msg * Warning: $computer will be rebooting at $schedreboottime on $Schedrebootdate for scheduled updates. To cancel, remove the scheduled task 'TwinglePreReboot', or run C:\anchor\scripts\twingle\Cancel Pending Maintenance.bat"
 		invoke-expression $msgcode
 
         set_nagios_status WARNING "Server updated, rebooting at $schedreboottime on $Schedrebootdate"
@@ -63,9 +63,9 @@ $canhasreboot = getconfig canhasreboot
 		
 	}
 	
-#} else {
-#	log " x No reboot required by update."
-#}
+} else {
+	log " x No reboot required by update."
+}
 
 logging end twingle_reboot
 

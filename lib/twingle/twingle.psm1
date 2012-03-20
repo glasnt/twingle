@@ -57,14 +57,13 @@ function getConfig ($config){
 
 #Passive Nagios Check submit
 function set_nagios_status ($result, $Text) {
-	#CUSTOMISE THIS YOURSELF!
-	
-	# You can send passive checks to nagios here. This is left as an exercise for the reader.
+       #CUSTOMISE THIS YOURSELF!
+       # You can send passive checks to nagios here. This is left as an exercise for the reader.
 
+       #save a copy to the log file
+       $logfile = "$twingleDir\twingle.log"
+       log "Nagios Passive Check submitted: $result : $Text"
 
-	#save a copy to the log file
-	$logfile = "$twingleDir\twingle.log"
-	log "Nagios Passive Check submitted: $result : $Text"
 }
 
 # Debug mode - sets the global debug variable to enable logging to stdout
@@ -174,8 +173,6 @@ function schedule_task ($name, $type, $day, $time, $action ) {
 		#$name - freeform 
 		#$day/$time - ignore for OnStart
 		
-		if ($time.length -le 4) { $time = "0"+$time}
-				
 		if ($type -eq "ONSTART") { $timing = ""; }
 		if ($type -eq "ONCE") {  $timing = "/sd $day /st $time"; if ($day.length -le 10) { $day = "0"+$day}}	
 		if ($type -eq "WEEKLY") {  $timing =  "/d $day /st $time";  }
@@ -207,4 +204,10 @@ function remove_schtask ($TaskName) {
 	}
 }
 
-
+# Nice date formatting functions (for schtasks)
+function format_time ($date) { 
+    return (get-date $date -format HH:mm)
+} 
+function format_date ($date) { 
+    return (get-date $date -format dd/MM/yyyy)
+} 

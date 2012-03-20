@@ -14,7 +14,7 @@
 #
 ##############################################################################
 
-$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
+$env:PSModulePath = $env:PSModulePath + ";c:\anchor\scripts\twingle\lib"; 
 Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
 
 # Skip straight to setup if required
@@ -26,6 +26,7 @@ if ($args -match "-setup") {
 function usage { 
 	"Twingle - tingle for windows."
 	"Parameters: -setup, -check, -warm, -install, -reboot"
+	"See Anchor Wiki documentation [[twingle]] for more information"
 	exit 0
 }
 

@@ -5,7 +5,7 @@
 # This code gets called from a scheduled task created from twingle_reboot.
 # Code does stuff before reboot, then reboots the system
 ##############################################################################
-$env:PSModulePath = $env:PSModulePath + ";c:\lib"; 
+$env:PSModulePath = $env:PSModulePath + ";c:\twingle\lib"; 
 Import-Module twingle; $ini = Parse_IniFile; $twingleDir = twingledir
 log "*** Pre Twingle Reboot hook start"
 ##############################################################################
@@ -39,9 +39,9 @@ remove_schtask "TwinglePreReboot"
 
 log "*** Twingle pre-reboot hook end"
 log "*** INITIATING REBOOT NOW ***"
-$rebootme = "shutdown /r /t 10 /c 'Machine rebooting in 10 seconds, to complete windows updates'"
+$rebootme = "shutdown /r /t 10 /c `"Machine rebooting in 10 seconds, to complete windows updates`""
 log "Reboot script: $rebootme"
-#invoke-expression $rebootme
+invoke-expression $rebootme
 log "Rebooting machine."
 
 
