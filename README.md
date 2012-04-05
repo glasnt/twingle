@@ -9,12 +9,13 @@ You have Windows Updates, right? They can be automatically run on a weekly basis
 # Features
 
 Some things twingle can do for you:
- - automated installation: just say what day/time of the week you want installs, and twingle does the rest!
-  - but you can still customize the installation
- - notify a robot for humanoid about pending installations
- - installs all, or only important updates
- - notifies any logged in users about pending installations
- - cleans up after itself, just like a toilet-trained puppy!
+
+ - Automated installation: just say what day/time of the week you want installs, and twingle does the rest!
+  - But you can still customize the installation
+ - Notify a robot for humanoid about pending installations
+ - Installs all, or only important updates
+ - Notifies any logged in users about pending installations
+ - Cleans up after itself, just like a toilet-trained puppy!
 
 # Installation
 
