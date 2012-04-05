@@ -10,13 +10,14 @@ You have Windows Updates, right? They can be automatically run on a weekly basis
 
 Some things twingle can do for you:
  - automated installation: just say what day/time of the week you want installs, and twingle does the rest!
-     - but you can still customize the installation
+  - but you can still customize the installation
  - notify a robot for humanoid about pending installations
  - installs all, or only important updates
  - notifies any logged in users about pending installations
  - cleans up after itself, just like a toilet-trained puppy!
 
-# Installation 
+# Installation
+
  - Copy the set of twingle files to `C:\twingle`, or similar
  - Run `Install Twingle.bat` to get the mini-installer
   - or run `twingle.ps1 -setup -full` to get the whole shebang
